@@ -1,38 +1,41 @@
-import React, { useState } from 'react';
-import MyButton from './components/MyButton';
+import React, { useState, useEffect } from 'react';
+// Import our services and subcomponents
+import { itemService } from './services/itemService';
+import ItemForm from './components/ItemForm';
 
 function App() {
-  // State to track if the secret message should be visible (starts as false)
-  const [showSecret, setShowSecret] = useState(false);
+  const [items, setItems] = useState([]);
+  const [error, setError] = useState(null);
 
-  const toggleSecret = () => {
-    // !showSecret toggles the boolean value (true becomes false, false becomes true)
-    setShowSecret(!showSecret);
+  // Fetch items using the service layer
+  useEffect(() => {
+    itemService.getItems()
+      .then((data) => setItems(data))
+      .catch(() => setError('Failed to load items.'));
+  }, []);
+
+  // Add items using the service layer
+  const handleAddItem = (itemName) => {
+    itemService.addItem(itemName)
+      .then((updatedItems) => setItems(updatedItems))
+      .catch(() => setError('Failed to add item.'));
   };
 
   return (
     <div style={{ fontFamily: 'sans-serif', padding: '20px' }}>
-      <h1>Conditional Rendering</h1>
+      <h1>Modular Full-Stack App</h1>
       
-      {/* 1. Dynamic Button Text using a Ternary Operator (condition ? value_if_true : value_if_false) */}
-      <MyButton 
-        text={showSecret ? "Hide Secret Message" : "Show Secret Message"} 
-        onClick={toggleSecret} 
-      />
+      {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      {/* 2. Conditional Display using the Logical AND (&&) operator */}
-      {/* If showSecret is true, render the <p> tag. If false, render nothing. */}
-      {showSecret && (
-        <div style={{
-          marginTop: '20px',
-          padding: '15px',
-          backgroundColor: '#e2f0d9',
-          border: '1px solid #385723',
-          borderRadius: '5px'
-        }}>
-          <p>🔒 <strong>Secret Code: ReactIsAwesome123</strong></p>
-        </div>
-      )}
+      {/* Render the extracted form component */}
+      <ItemForm onAddItem={handleAddItem} />
+
+      <h3>Current Shopping List:</h3>
+      <ul>
+        {items.map((item, index) => (
+          <li key={index} style={{ fontSize: '18px', padding: '5px 0' }}>{item}</li>
+        ))}
+      </ul>
     </div>
   );
 }
